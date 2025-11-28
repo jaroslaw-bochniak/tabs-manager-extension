@@ -1,0 +1,124 @@
+# Conventional Commits Rules
+
+## Commit Message Format
+
+All commit messages MUST follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) specification.
+
+### Format Structure
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Commit Types
+
+**Required types:**
+- `feat`: A new feature (correlates with MINOR in Semantic Versioning)
+- `fix`: A bug fix (correlates with PATCH in Semantic Versioning)
+
+**Common optional types:**
+- `build`: Changes that affect the build system or external dependencies
+- `chore`: Changes to the build process or auxiliary tools and libraries
+- `ci`: Changes to CI configuration files and scripts
+- `docs`: Documentation only changes
+- `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc.)
+- `refactor`: A code change that neither fixes a bug nor adds a feature
+- `perf`: A code change that improves performance
+- `test`: Adding missing tests or correcting existing tests
+
+### Breaking Changes
+
+Breaking changes MUST be indicated by:
+1. Adding `!` after the type/scope: `feat!: send an email to the customer when a product is shipped`
+2. Including `BREAKING CHANGE:` in the footer:
+   ```
+   feat: allow provided config object to extend other configs
+   
+   BREAKING CHANGE: `extends` key in config file is now used for extending other config files
+   ```
+
+### Scope
+
+A scope MAY be provided after a type to provide additional contextual information:
+- `feat(parser): add ability to parse arrays`
+- `fix(api): resolve authentication timeout issue`
+
+### Message Length Guidelines
+
+- **Description MUST be concise**: Keep the description under 72 characters when possible, maximum 100 characters
+- **Prefer short, clear descriptions**: Use imperative mood and be direct (e.g., "add feature" not "added a new feature")
+- **Avoid unnecessary words**: Remove filler words like "the", "a", "an" when possible without losing clarity
+- **Body is optional**: Only include a body when absolutely necessary to explain complex changes or breaking changes
+- **One-line commits preferred**: Most commits should be a single line with just type, scope (if needed), and description
+
+### Rules for Cursor
+
+1. **ALWAYS** format commit messages according to Conventional Commits specification
+2. **ALWAYS** use lowercase for commit types (e.g., `feat`, `fix`, not `Feat`, `Fix`)
+3. **ALWAYS** keep descriptions short and concise (under 72 characters preferred, max 100)
+4. **MUST** use `feat:` when adding new functionality
+5. **MUST** use `fix:` when fixing bugs
+6. **SHOULD** include a scope when the change affects a specific part of the codebase
+7. **MUST** indicate breaking changes with `!` or `BREAKING CHANGE:` footer
+8. **AVOID** including a body unless the change is complex or requires explanation
+9. **MAY** include footers for references, reviewers, etc. (e.g., `Refs: #123`) only when necessary
+
+### Examples
+
+**Simple feature:**
+```
+feat: add dark mode toggle
+```
+
+**Feature with scope:**
+```
+feat(ui): add dark mode toggle to settings page
+```
+
+**Bug fix:**
+```
+fix: resolve memory leak in tab manager
+```
+
+**Bug fix with scope:**
+```
+fix(background): prevent duplicate tab closure
+```
+
+**Breaking change:**
+```
+feat!: migrate to Manifest V3
+
+BREAKING CHANGE: requires Chrome 88+
+```
+
+**With body (use sparingly, only for complex changes):**
+```
+fix: prevent request racing
+
+Add request id tracking to dismiss stale responses.
+```
+
+**Documentation:**
+```
+docs: update installation instructions for Chrome
+```
+
+**Refactoring:**
+```
+refactor: extract tab normalization logic
+```
+
+### When Making Commits
+
+- Review the changes and determine the appropriate type
+- Choose a descriptive scope if applicable
+- Write a short, clear, imperative-mood description (keep under 72 characters)
+- Use the shortest description that accurately describes the change
+- Include breaking change indicators if applicable
+- Add body or footers only when absolutely necessary (most commits should be one line)
+
