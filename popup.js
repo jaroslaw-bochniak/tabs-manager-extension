@@ -6,41 +6,35 @@ document.addEventListener('DOMContentLoaded', () => {
     closeSameHost: document.getElementById('closeSameHostBtn'),
     closeCurrentAndSameHost: document.getElementById('closeCurrentAndSameHostBtn'),
     sortTabsByHost: document.getElementById('sortTabsByHostBtn'),
+    mergeAllWindows: document.getElementById('mergeAllWindowsBtn'),
     closeMergedGitHubPRs: document.getElementById('closeMergedGitHubPRsBtn')
   };
   const statusDiv = document.getElementById('status');
   
-  /**
-   * Update button text with count
-   */
-  function updateButtonText(button, baseText, count) {
-    // Find the text span (the one that's not the icon)
-    const spans = button.querySelectorAll('span');
-    const textSpan = Array.from(spans).find(span => !span.classList.contains('icon'));
-    
-    if (textSpan && count !== undefined) {
-      if (count > 0) {
-        textSpan.textContent = `${baseText} (${count})`;
-      } else {
-        textSpan.textContent = baseText;
+  function setBadge(button, count) {
+    let badge = button.querySelector('.badge');
+    if (count > 0) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'badge';
+        button.appendChild(badge);
       }
+      badge.textContent = count;
+    } else if (badge) {
+      badge.remove();
     }
   }
-  
-  /**
-   * Load tab counts and update button text
-   */
+
   async function loadTabCounts() {
     try {
       const response = await chrome.runtime.sendMessage({ action: 'getCounts' });
       if (response.success && response.counts) {
         const counts = response.counts;
-        
-        // Update button texts with counts
-        updateButtonText(buttons.closeDuplicates, 'Close Exact Duplicates', counts.closeDuplicates);
-        updateButtonText(buttons.closeSameHost, 'Close Same Host', counts.closeSameHost);
-        updateButtonText(buttons.closeCurrentAndSameHost, 'Close Current & Same Host', counts.closeCurrentAndSameHost);
-        updateButtonText(buttons.closeMergedGitHubPRs, 'Close Merged GitHub PRs', counts.closeMergedGitHubPRs);
+        setBadge(buttons.closeDuplicates, counts.closeDuplicates);
+        setBadge(buttons.closeSameHost, counts.closeSameHost);
+        setBadge(buttons.closeCurrentAndSameHost, counts.closeCurrentAndSameHost);
+        setBadge(buttons.mergeAllWindows, counts.mergeAllWindows);
+        setBadge(buttons.closeMergedGitHubPRs, counts.closeMergedGitHubPRs);
       }
     } catch (error) {
       console.error('Error loading tab counts:', error);
@@ -72,6 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
       noResultsText: 'No tabs to sort',
       hasCount: true
     },
+    'mergeAllWindows': {
+      successText: (count) => `Merged ${count} tab(s) into this window`,
+      noResultsText: 'Only one window open — nothing to merge',
+      hasCount: true
+    },
     'closeMergedGitHubPRs': {
       successText: (count) => `Closed ${count} merged PR tab(s)`,
       noResultsText: 'No merged GitHub PR tabs found',
@@ -94,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const config = actionConfig[action];
         
         if (response.success) {
-          const count = response.closed || response.sorted || 0;
+          const count = response.closed || response.sorted || response.merged || 0;
           if (count > 0 && config.hasCount) {
             statusDiv.textContent = `✓ ${config.successText(count)}`;
             statusDiv.className = 'status success';
@@ -135,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buttons.closeSameHost.addEventListener('click', handleAction('closeSameHost'));
   buttons.closeCurrentAndSameHost.addEventListener('click', handleAction('closeCurrentAndSameHost'));
   buttons.sortTabsByHost.addEventListener('click', handleAction('sortTabsByHost'));
+  buttons.mergeAllWindows.addEventListener('click', handleAction('mergeAllWindows'));
   buttons.closeMergedGitHubPRs.addEventListener('click', handleAction('closeMergedGitHubPRs'));
 });
 

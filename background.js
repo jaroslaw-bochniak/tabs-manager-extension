@@ -7,6 +7,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     'closeCurrentAndSameHost': () => closeSameHostTabs(true),
     'sortTabsByHost': sortTabsByHost,
     'closeMergedGitHubPRs': closeMergedGitHubPRs,
+    'mergeAllWindows': mergeAllWindows,
     'getCounts': getTabCounts
   };
 
@@ -25,6 +26,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
       if (result.hasOwnProperty('sorted')) {
         response.sorted = result.sorted;
+      }
+      if (result.hasOwnProperty('merged')) {
+        response.merged = result.merged;
       }
       if (result.hasOwnProperty('counts')) {
         response.counts = result.counts;
@@ -312,6 +316,38 @@ async function closeMergedGitHubPRs() {
   return { closed: closedCount };
 }
 
+/**
+ * Moves all tabs from other windows into the current window
+ */
+async function mergeAllWindows() {
+  const [currentWindow] = await chrome.windows.getAll({ populate: false });
+  const activeWindows = await chrome.windows.getAll({ windowTypes: ['normal'] });
+
+  if (activeWindows.length <= 1) {
+    return { merged: 0 };
+  }
+
+  // Get the currently focused window as the target
+  const focusedWindow = activeWindows.find(w => w.focused) || activeWindows[0];
+  const targetWindowId = focusedWindow.id;
+
+  let movedCount = 0;
+
+  for (const win of activeWindows) {
+    if (win.id === targetWindowId) continue;
+
+    const tabs = await chrome.tabs.query({ windowId: win.id });
+    const tabIds = tabs.map(t => t.id);
+
+    if (tabIds.length > 0) {
+      await chrome.tabs.move(tabIds, { windowId: targetWindowId, index: -1 });
+      movedCount += tabIds.length;
+    }
+  }
+
+  return { merged: movedCount };
+}
+
 function normalizeUrl(url) {
   try {
     // Remove fragments and trailing slashes for comparison
@@ -339,10 +375,16 @@ async function getTabCounts() {
     closeDuplicates: await countDuplicateTabs(),
     closeSameHost: await countSameHostTabs(false),
     closeCurrentAndSameHost: await countSameHostTabs(true),
+    mergeAllWindows: await countOtherWindows(),
     closeMergedGitHubPRs: await countMergedGitHubPRs()
   };
-  
+
   return { counts };
+}
+
+async function countOtherWindows() {
+  const windows = await chrome.windows.getAll({ windowTypes: ['normal'] });
+  return Math.max(0, windows.length - 1);
 }
 
 /**
